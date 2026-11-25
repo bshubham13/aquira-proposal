@@ -25,6 +25,7 @@ export default function App() {
   const [mode, setMode] = useState<AppMode>(initialData ? 'recipient' : 'creator')
   const [data, setData] = useState<ProposalData>(initialData ?? DEFAULT_DATA)
   const [stage, setStage] = useState<RecipientStage>('insert-coin')
+  const [isPreview, setIsPreview] = useState(false)
 
   useEffect(() => {
     const syncHash = () => {
@@ -33,6 +34,7 @@ export default function App() {
         setData(shared)
         setMode('recipient')
         setStage('insert-coin')
+        setIsPreview(false)
       }
     }
     window.addEventListener('hashchange', syncHash)
@@ -47,12 +49,14 @@ export default function App() {
     setData(proposal)
     setStage('insert-coin')
     setMode('recipient')
+    setIsPreview(true)
   }, [])
 
   const backToStudio = useCallback(() => {
     history.replaceState(null, '', window.location.pathname)
     setMode('creator')
     setStage('insert-coin')
+    setIsPreview(false)
   }, [])
 
   return (
@@ -67,7 +71,7 @@ export default function App() {
           <motion.div key="recipient" className="recipient-wrap" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
             <div className="recipient-topbar">
               <span>MIDNIGHT DILIVERY™</span>
-              <button onClick={backToStudio}>← creator studio</button>
+              {isPreview ? <button onClick={backToStudio}>← creator studio</button> : <span>SECURE RECIPIENT MODE</span>}
             </div>
             <div className="delivery-shell">
               <div className="shell-stamp">FRAGILE FEELINGS</div>

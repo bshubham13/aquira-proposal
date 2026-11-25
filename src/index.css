@@ -8,7 +8,7 @@
 
 * { box-sizing: border-box; }
 html { min-width: 320px; background: #f6efe5; }
-body { margin: 0; min-width: 320px; min-height: 100vh; }
+body { margin: 0; min-width: 320px; min-height: 100vh; overflow-x: hidden; }
 button, input, textarea { font: inherit; }
 button { color: inherit; }
 button:focus-visible, input:focus-visible, textarea:focus-visible { outline: 3px solid #4934bd; outline-offset: 3px; }
