@@ -2,6 +2,10 @@ export interface ProposalData {
   recipientName: string
   senderName: string
   message: string
+  nickname: string
+  memory: string
+  promise: string
+  tone: 'peach' | 'lilac' | 'mint'
   createdAt: number
 }
 

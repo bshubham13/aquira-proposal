@@ -1,81 +1,27 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
-import { ProposalData } from '../../types'
+import type { ProposalData } from '../../types'
 
-const MASCOIT_LINES = [
-  `Arre wah! Koi naya player aaya hai arcade mein.`,
-  `Main hoon Chiku — yeh arcade ka official "feelings checker" mascot.`,
-  `Yahan ek hi kaam hai: dekhna ki {recipient} ko {sender} pe kitna crush hai.`,
-  `Lekin pehle ek chhota sa test...`,
+const replies = [
+  ['Obviously cute', 'Correct. Eyes working. ✅'],
+  ['Thoda sus', 'Fair. Itna effort usually suspicious hota hai.'],
+  ['Who is asking?', 'Me: Momo, certified dilivery pigeon. Please respect authority.'],
 ]
 
-export function Mascot({
-  data,
-  onDone,
-}: {
-  data: ProposalData
-  onDone: () => void
-}) {
-  const [lineIdx, setLineIdx] = useState(0)
-  const [talking, setTalking] = useState(false)
-
-  const currentLine =
-    MASCOIT_LINES[lineIdx].replace('{recipient}', data.recipientName).replace(
-      '{sender}',
-      data.senderName
-    )
-
-  const nextLine = () => {
-    setTalking(false)
-    setTimeout(() => {
-      if (lineIdx >= MASCOIT_LINES.length - 1) {
-        onDone()
-      } else {
-        setLineIdx((i) => i + 1)
-      }
-    }, 700)
-  }
-
+export function Mascot({ data, onDone }: { data: ProposalData; onDone: () => void }) {
+  const [picked, setPicked] = useState<number | null>(null)
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      className="stage mascot-stage"
-    >
-      <div className="mascot-body">
-        <div className="mascot-machine">
-          <div className="mascot-screen">
-            <div className="mascot-face">
-              <div className="eye left"></div>
-              <div className="eye right"></div>
-              <div className="mouth">{talking ? '◑' : '◐'}</div>
-            </div>
-            <div className="mascot-text">
-              <span className="speaker">Chiku: </span>
-              <span className="dialogue">{currentLine}</span>
-            </div>
-          </div>
-          <div className="mascot-base">
-            <div className="mascot-antenna" />
-            <div className="mascot-antenna" style={{ left: 'auto', right: 18 }} />
-          </div>
-        </div>
-        <div className="mascot-hint">
-          {lineIdx < MASCOIT_LINES.length - 1 ? (
-            <button className="btn-next" onClick={() => {
-              setTalking(true)
-              setTimeout(nextLine, 400)
-            }}>
-              Next ⏭
-            </button>
-          ) : (
-            <button className="btn-next" onClick={nextLine}>
-              Chalo agle level pe 🎮
-            </button>
-          )}
-        </div>
+    <motion.section className="stage mascot-stage" initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -30 }}>
+      <div className="chat-window">
+        <div className="chat-head"><div className="momo-avatar">M</div><div><strong>Momo from Dilivery</strong><span><i /> online & unnecessarily invested</span></div><b>•••</b></div>
+        <div className="chat-date">TODAY 11:12 PM</div>
+        <div className="bubble incoming">Hii {data.nickname} 👋 Parcel mein feelings hain. Customs ne rok diya because “too much pyaar, not enough paperwork.”</div>
+        <div className="bubble incoming">Quick vibe check: {data.senderName} ko 1–10 mein kitna cute consider kiya jaata hai?</div>
+        {picked !== null && <motion.div className="bubble outgoing" initial={{ scale: .8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}>{replies[picked][0]}</motion.div>}
+        {picked !== null && <motion.div className="bubble incoming momo-reply" initial={{ y: 8, opacity: 0 }} animate={{ y: 0, opacity: 1 }}>{replies[picked][1]}</motion.div>}
+        {picked === null ? <div className="quick-replies">{replies.map((reply, index) => <button key={reply[0]} onClick={() => setPicked(index)}>{reply[0]}</button>)}</div> : <button className="chat-continue" onClick={onDone}>release the parcel →</button>}
       </div>
-    </motion.div>
+      <aside className="mascot-card"><div className="momo-bird"><span>◕</span><span>◕</span><i>◆</i></div><small>YOUR DILIVERY AGENT</small><h2>Momo has one job.</h2><p>Parcel safely deliver karna. Gossip collect karna is a passion project.</p><div className="rating">★★★★★ <span>4.9 · emotionally available</span></div></aside>
+    </motion.section>
   )
 }

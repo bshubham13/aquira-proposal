@@ -1,65 +1,26 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { motion } from 'framer-motion'
+import { Heart, LockKeyhole, PackageOpen } from 'lucide-react'
 import type { ProposalData } from '../../types'
 
-const BUILDUP_MESSAGES = [
-  { text: 'Kabhi kabhi sochta hoon...', delay: 0 },
-  { text: 'Ki agar tumne haan nahi kiya, toh main kya karunga?', delay: 900 },
-  { text: 'Mera sabse khaas din wahi hoga, jab tum meri hogi.', delay: 1700 },
-  { text: 'Sabse sweet, sabse mad, sabse perfect — tum ho.', delay: 2500 },
-  { text: 'Isliye maine yeh saara arcade banaya.', delay: 3200 },
-  { text: 'Bas ek baat poochni hai tumse...', delay: 4000 },
-]
-
-export function Buildup({ onDone }: { onDone: () => void }) {
-  const [visibleCount, setVisibleCount] = useState(0)
-
-  useEffect(() => {
-    const t = setTimeout(() => {
-      setVisibleCount(1)
-    }, 400)
-    return () => clearTimeout(t)
-  }, [])
-
-  useEffect(() => {
-    if (visibleCount >= BUILDUP_MESSAGES.length) {
-      const t = setTimeout(onDone, 900)
-      return () => clearTimeout(t)
-    }
-  }, [visibleCount, onDone])
-
+export function Buildup({ data, onDone }: { data: ProposalData; onDone: () => void }) {
+  const [open, setOpen] = useState(false)
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      className="stage buildup-stage"
-    >
-      <div className="buildup-body">
-        <div className="buildup-messages">
-          {BUILDUP_MESSAGES.slice(0, visibleCount).map((m, i) => (
-            <motion.div
-              key={i}
-              initial={{ opacity: 0, y: 20, scale: 0.9 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: -20 }}
-              transition={{ duration: 0.5 }}
-              className="buildup-msg"
-              style={{ animationDelay: `${m.delay}ms` }}
-            >
-              <span className="buildup-text">{m.text}</span>
-              {i === BUILDUP_MESSAGES.length - 1 && (
-                <span className="buildup-cursor">_</span>
-              )}
-            </motion.div>
-          ))}
-        </div>
-        {visibleCount >= BUILDUP_MESSAGES.length && (
-          <div className="buildup-hint">
-            Tap karein aage badhne ke liye ➤
-          </div>
-        )}
-      </div>
-    </motion.div>
+    <motion.section className="stage letter-stage" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, scale: 1.05 }}>
+      {!open ? <div className="sealed-letter">
+        <div className="letter-meta"><span>PRIVATE & PERSONAL</span><span>OPEN WHEN READY</span></div>
+        <div className="address-block"><small>SPECIAL DILIVERY FOR</small><strong>{data.recipientName}</strong><span>also known as “{data.nickname}”</span></div>
+        <button className="wax-seal" onClick={() => setOpen(true)} aria-label="Break the wax seal"><Heart fill="currentColor" /></button>
+        <p><LockKeyhole size={14} /> tap the seal to open</p>
+        <div className="letter-stamp">AIR<br />MAIL</div>
+      </div> : <motion.article className="open-letter" initial={{ rotateX: 70, opacity: 0 }} animate={{ rotateX: 0, opacity: 1 }}>
+        <div className="paperclip">⌇</div><span className="handwritten">Dear {data.nickname},</span>
+        <p>Remember this?</p><blockquote>“{data.memory}”</blockquote>
+        <p>{data.message}</p>
+        <div className="tiny-promise"><span>TINY PROMISE, BIG INTENT</span>{data.promise}</div>
+        <p className="letter-sign">— yours, nervously<br /><strong>{data.senderName}</strong></p>
+        <button className="letter-next" onClick={onDone}><PackageOpen size={17} /> There’s one last thing</button>
+      </motion.article>}
+    </motion.section>
   )
 }

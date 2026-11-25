@@ -1,7 +1,6 @@
-import { useState, useCallback, useMemo, useEffect } from 'react'
-import { motion } from 'framer-motion'
+import { useCallback, useEffect, useState } from 'react'
+import { AnimatePresence, motion } from 'framer-motion'
 import { Background } from './components/Background'
-import type { ProposalData, RecipientStage } from './types'
 import { Creator } from './components/Creator'
 import { InsertCoin } from './components/stages/InsertCoin'
 import { Boot } from './components/stages/Boot'
@@ -12,104 +11,86 @@ import { Buildup } from './components/stages/Buildup'
 import { Proposal } from './components/stages/Proposal'
 import { Celebration } from './components/stages/Celebration'
 import { Share } from './components/stages/Share'
+import { decodeProposal, DEFAULT_DATA } from './proposal'
+import type { AppMode, ProposalData, RecipientStage } from './types'
 import './App.css'
 
-const DEFAULT_DATA: ProposalData = {
-  recipientName: 'Priya',
-  senderName: 'Rohan',
-  message:
-    'Tum mere saath hotaaiye... actually tum pehle se ho, bas officially announce karna baaki hai 😘',
-  createdAt: Date.now(),
-}
-
-function parseDataFromHash(): ProposalData | null {
-  if (typeof window === 'undefined') return null
-  const hash = window.location.hash.slice(1)
-  if (!hash) return null
-  try {
-    const json = atob(hash)
-    const data = JSON.parse(json)
-    if (data.recipientName && data.senderName) return data
-  } catch {
-    // ignore malformed hash
-  }
-  return null
-}
+const FLOW: RecipientStage[] = [
+  'insert-coin', 'boot', 'mascot', 'runaway-no', 'heart-game',
+  'buildup', 'proposal', 'celebration', 'share',
+]
 
 export default function App() {
-  const [mode, setMode] = useState<AppMode>('creator')
-  const [data, setData] = useState<ProposalData>(DEFAULT_DATA)
+  const initialData = decodeProposal(window.location.hash)
+  const [mode, setMode] = useState<AppMode>(initialData ? 'recipient' : 'creator')
+  const [data, setData] = useState<ProposalData>(initialData ?? DEFAULT_DATA)
   const [stage, setStage] = useState<RecipientStage>('insert-coin')
 
-  const hashData = useMemo(() => parseDataFromHash(), [])
-
-  // If a recipient link is loaded, switch to recipient mode with that data
   useEffect(() => {
-    if (hashData) {
-      setData(hashData)
-      setMode('recipient')
-      setStage('insert-coin')
+    const syncHash = () => {
+      const shared = decodeProposal(window.location.hash)
+      if (shared) {
+        setData(shared)
+        setMode('recipient')
+        setStage('insert-coin')
+      }
     }
-  }, [hashData])
-
-  const goNext = useCallback((next: RecipientStage) => {
-    setStage(next)
+    window.addEventListener('hashchange', syncHash)
+    return () => window.removeEventListener('hashchange', syncHash)
   }, [])
 
-  const restart = useCallback(() => {
+  const next = useCallback(() => {
+    setStage((current) => FLOW[Math.min(FLOW.indexOf(current) + 1, FLOW.length - 1)])
+  }, [])
+
+  const preview = useCallback((proposal: ProposalData) => {
+    setData(proposal)
+    setStage('insert-coin')
+    setMode('recipient')
+  }, [])
+
+  const backToStudio = useCallback(() => {
+    history.replaceState(null, '', window.location.pathname)
     setMode('creator')
     setStage('insert-coin')
   }, [])
 
-  const recipient = (
-    <div className="recipient-wrap">
-      <Background />
-      <div className="cabinet">
-        <div className="crt-screen">
-          <div className="screen-inner">
-            {stage === 'insert-coin' && (
-              <InsertCoin data={data} onInsert={() => goNext('boot')} />
-            )}
-            {stage === 'boot' && <Boot onDone={() => goNext('mascot')} />}
-            {stage === 'mascot' && (
-              <Mascot data={data} onDone={() => goNext('runaway-no')} />
-            )}
-            {stage === 'runaway-no' && (
-              <RunawayNo data={data} onYes={() => goNext('heart-game')} />
-            )}
-            {stage === 'heart-game' && (
-              <HeartGame data={data} onWin={() => goNext('buildup')} />
-            )}
-            {stage === 'buildup' && (
-              <Buildup data={data} onDone={() => goNext('proposal')} />
-            )}
-            {stage === 'proposal' && (
-              <Proposal
-                data={data}
-                onYes={() => goNext('celebration')}
-                onNo={() => goNext('runaway-no')}
-              />
-            )}
-            {stage === 'celebration' && (
-              <Celebration data={data} onDone={() => goNext('share')} />
-            )}
-            {stage === 'share' && <Share data={data} onRestart={restart} />}
-          </div>
-        </div>
-      </div>
-    </div>
-  )
-
   return (
-    <div className="app">
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        className="mode-panel"
-      >
-        {mode === 'creator' ? <Creator data={data} onGenerate={setData} /> : recipient}
-      </motion.div>
-    </div>
+    <main className={`app tone-${data.tone}`}>
+      <Background />
+      <AnimatePresence mode="wait">
+        {mode === 'creator' ? (
+          <motion.div key="creator" className="mode-panel" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+            <Creator initialData={data} onPreview={preview} />
+          </motion.div>
+        ) : (
+          <motion.div key="recipient" className="recipient-wrap" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+            <div className="recipient-topbar">
+              <span>MIDNIGHT DILIVERY™</span>
+              <button onClick={backToStudio}>← creator studio</button>
+            </div>
+            <div className="delivery-shell">
+              <div className="shell-stamp">FRAGILE FEELINGS</div>
+              <div className="journey-progress" aria-label={`Journey step ${FLOW.indexOf(stage) + 1} of ${FLOW.length}`}>
+                {FLOW.map((item) => <span key={item} className={FLOW.indexOf(item) <= FLOW.indexOf(stage) ? 'active' : ''} />)}
+              </div>
+              <div className="experience-window">
+                <AnimatePresence mode="wait">
+                  {stage === 'insert-coin' && <InsertCoin key={stage} data={data} onInsert={next} />}
+                  {stage === 'boot' && <Boot key={stage} data={data} onDone={next} />}
+                  {stage === 'mascot' && <Mascot key={stage} data={data} onDone={next} />}
+                  {stage === 'runaway-no' && <RunawayNo key={stage} data={data} onYes={next} />}
+                  {stage === 'heart-game' && <HeartGame key={stage} data={data} onWin={next} />}
+                  {stage === 'buildup' && <Buildup key={stage} data={data} onDone={next} />}
+                  {stage === 'proposal' && <Proposal key={stage} data={data} onYes={next} onNo={() => undefined} />}
+                  {stage === 'celebration' && <Celebration key={stage} data={data} onDone={next} />}
+                  {stage === 'share' && <Share key={stage} data={data} onRestart={() => setStage('insert-coin')} />}
+                </AnimatePresence>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </main>
   )
 }

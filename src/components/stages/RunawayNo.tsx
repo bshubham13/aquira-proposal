@@ -1,94 +1,24 @@
-import { useState, useRef, useCallback } from 'react'
+import { useState } from 'react'
 import { motion } from 'framer-motion'
-import { ProposalData } from '../../types'
+import { ScanFace } from 'lucide-react'
+import type { ProposalData } from '../../types'
 
-const NO_LINE_REPLIES = [
-  "Haanji, balki mujhe tumse zyada pyar hai apne phone se 😤",
-  "Nahi milne wala 'No', tum mere liye banaye gaye ho 💖",
-  "Itna rulaogi? Thik hai, main yeh button chhupaa lunga 😭",
-  "Button bhaag gaya, lekin tum nahi bhaag sakti 😏",
-  "Haha, 'No' button darr gaya! Ab tum do.",
-]
+const excuses = ['nice try 😭', 'camera says that is cap', 'button bhi trust nahi kar raha', 'bas karo yaar, parcel thanda ho raha hai']
 
-export function RunawayNo({
-  data,
-  onYes,
-}: {
-  data: ProposalData
-  onYes: () => void
-}) {
-  const [noPosition, setNoPosition] = useState({ x: 70, y: 50 })
-  const [clickCount, setClickCount] = useState(0)
-  const noBtnRef = useRef<HTMLButtonElement>(null)
-
-  const moveNoButton = useCallback(() => {
-    const btn = noBtnRef.current
-    if (!btn) return
-    const rect = btn.getBoundingClientRect()
-    const parent = btn.parentElement!
-    const pr = parent.getBoundingClientRect()
-    const maxX = pr.width - rect.width - 20
-    const maxY = pr.height - rect.height - 20
-    const x = Math.max(10, Math.random() * maxX)
-    const y = Math.max(10, Math.random() * maxY)
-    setNoPosition({ x, y })
-  }, [])
-
-  const handleNoMouseEnter = () => {
-    moveNoButton()
-    setClickCount((c) => c + 1)
-  }
-
-  const handleYesClick = () => onYes()
-
-  const replyIndex = Math.min(clickCount - 1, NO_LINE_REPLIES.length - 1)
-  const showingReply = clickCount > 0
-
+export function RunawayNo({ data, onYes }: { data: ProposalData; onYes: () => void }) {
+  const [escapes, setEscapes] = useState(0)
+  const positions = [{ x: 0, y: 0 }, { x: 105, y: -42 }, { x: -88, y: 48 }, { x: 75, y: 55 }, { x: -58, y: -48 }]
+  const dodge = () => setEscapes((value) => value + 1)
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      className="stage runaway-stage"
-    >
-      <div className="runaway-body">
-        <h2 className="question">
-          Kya tum {data.senderName} ko pasand karte ho?
-        </h2>
-        <p className="question-sub">
-          (Sach-sach batana, main sab dekh raha hoon 👀)
-        </p>
-
-        <div className="runaway-options">
-          <button className="btn-yes" onClick={handleYesClick}>
-            Haan, 100% ✅
-          </button>
-          <button
-            ref={noBtnRef}
-            className="btn-no"
-            style={{ left: noPosition.x, top: noPosition.y }}
-            onMouseEnter={handleNoMouseEnter}
-            onClick={(e) => {
-              e.stopPropagation()
-              moveNoButton()
-              setClickCount((c) => c + 1)
-            }}
-          >
-            Na🚫
-          </button>
-        </div>
-
-        {showingReply && (
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="no-reply"
-          >
-            <span className="reply-badge">Chiku kehti hai:</span>
-            {NO_LINE_REPLIES[replyIndex]}
-          </motion.div>
-        )}
+    <motion.section className="stage identity-stage" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+      <div className="scanner-card">
+        <div className="scanner-top"><span>RECIPIENT VERIFICATION</span><b>SECURE-ish</b></div>
+        <div className="face-scan"><div className="scan-line" /><ScanFace size={132} strokeWidth={.8} /><span>scanning cuteness… 100%</span></div>
+        <h2>Are you really {data.recipientName}?</h2>
+        <p>Legal note: sirf wahi person aage jaa sakta hai jiske liye {data.senderName} ne itna overthink kiya.</p>
+        <div className="identity-actions"><button className="confirm-btn" onClick={onYes}>Yes, main hi hoon <span>→</span></button><motion.button className="deny-btn" animate={positions[escapes % positions.length]} transition={{ type: 'spring', stiffness: 380, damping: 18 }} onMouseEnter={dodge} onTouchStart={dodge} onClick={dodge}>Nope</motion.button></div>
+        {escapes > 0 && <motion.div className="scanner-toast" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>Momo: {excuses[Math.min(escapes - 1, excuses.length - 1)]}</motion.div>}
       </div>
-    </motion.div>
+    </motion.section>
   )
 }

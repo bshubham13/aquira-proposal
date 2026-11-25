@@ -1,87 +1,12 @@
-import { useEffect, useRef } from 'react'
 import { motion } from 'framer-motion'
+import { PartyPopper } from 'lucide-react'
 import type { ProposalData } from '../../types'
 
-export function Celebration({
-  data,
-  onDone,
-}: {
-  data: ProposalData
-  onDone: () => void
-}) {
-  const canvasRef = useRef<HTMLCanvasElement>(null)
-  const animRef = useRef<number | null>(null)
-
-  useEffect(() => {
-    const canvas = canvasRef.current
-    if (!canvas) return
-    const ctx = canvas.getContext('2d')
-    if (!ctx) return
-
-    const resize = () => {
-      canvas.width = window.innerWidth
-      canvas.height = window.innerHeight
-    }
-    window.addEventListener('resize', resize)
-    resize()
-
-    const colors = ['#ff007f', '#00d9ff', '#fdfd00', '#bc13fe', '#0aff00']
-    const pieces = Array.from({ length: 120 }, () => ({
-      x: Math.random() * canvas.width,
-      y: Math.random() * canvas.height - canvas.height,
-      vx: (Math.random() - 0.5) * 4,
-      vy: Math.random() * 6 + 2,
-      size: Math.random() * 8 + 4,
-      color: colors[Math.floor(Math.random() * colors.length)],
-      rot: Math.random() * 360,
-      vrot: (Math.random() - 0.5) * 10,
-    }))
-
-    const draw = () => {
-      ctx.clearRect(0, 0, canvas.width, canvas.height)
-      pieces.forEach((p) => {
-        p.y += p.vy
-        p.x += p.vx
-        p.rot += p.vrot
-        if (p.y > canvas.height) p.y = -20
-        ctx.save()
-        ctx.translate(p.x, p.y)
-        ctx.rotate((p.rot * Math.PI) / 180)
-        ctx.fillStyle = p.color
-        ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size)
-        ctx.restore()
-      })
-      animRef.current = requestAnimationFrame(draw)
-    }
-    animRef.current = requestAnimationFrame(draw)
-
-    return () => {
-      window.removeEventListener('resize', resize)
-      if (animRef.current) cancelAnimationFrame(animRef.current)
-    }
-  }, [])
-
+export function Celebration({ data, onDone }: { data: ProposalData; onDone: () => void }) {
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      className="stage celebration-stage"
-    >
-      <canvas ref={canvasRef} className="confetti-canvas" />
-      <div className="celebration-body">
-        <div className="celebration-badge neon-green">IT'S A YES! 🎉</div>
-        <h1 className="celebration-title">
-          {data.recipientName} ❤️ {data.senderName}
-        </h1>
-        <p className="celebration-sub">
-          Sabse best decision. Ab officially couples ho! 🥂
-        </p>
-        <div className="mascot-dance">💃 Chiku is dancing! ✨</div>
-        <button className="btn-next" onClick={onDone}>
-          Share karo experience 💌
-        </button>
-      </div>
-    </motion.div>
+    <motion.section className="stage celebration-stage" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+      <div className="confetti-field" aria-hidden="true">{Array.from({ length: 34 }, (_, index) => <motion.i key={index} style={{ left: `${(index * 29) % 100}%`, background: `var(--confetti-${index % 4})` }} initial={{ y: -80, rotate: 0 }} animate={{ y: '110vh', rotate: 540 }} transition={{ duration: 2.8 + (index % 5) * .45, repeat: Infinity, delay: (index % 9) * .12 }} />)}</div>
+      <div className="celebration-copy"><motion.div className="yes-badge" initial={{ scale: 0, rotate: -20 }} animate={{ scale: 1, rotate: -5 }} transition={{ type: 'spring', delay: .15 }}>IT’S A YES!</motion.div><span className="eyebrow"><PartyPopper size={14} /> breaking: local cuties make it official</span><h1>{data.recipientName}<span>♥</span>{data.senderName}</h1><p>Internet ka aaj ka kaam complete. Momo emotional hai. Hum pretend karenge uski aankh mein bas confetti gaya.</p><div className="celebration-ticker"><span>OFFICIAL UPDATE</span><b>{data.recipientName.toUpperCase()} CHOSE {data.senderName.toUpperCase()} · GOOD TASTE CONFIRMED ·</b></div><button className="stage-action" onClick={onDone}>Collect your delivery receipt →</button></div>
+    </motion.section>
   )
 }

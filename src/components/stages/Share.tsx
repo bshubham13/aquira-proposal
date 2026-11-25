@@ -1,74 +1,23 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
-import { Link, Mail, ArrowLeft, Heart } from 'lucide-react'
-import { ProposalData } from '../../types'
+import { Check, Copy, RotateCcw } from 'lucide-react'
+import type { ProposalData } from '../../types'
 
-export function Share({
-  data,
-  onRestart,
-}: {
-  data: ProposalData
-  onRestart: () => void
-}) {
+export function Share({ data, onRestart }: { data: ProposalData; onRestart: () => void }) {
   const [copied, setCopied] = useState(false)
-
-  const link = `${window.location.origin}${window.location.pathname}#${btoa(
-    JSON.stringify(data)
-  )}`
-
-  const copyLink = () => {
-    navigator.clipboard.writeText(link)
-    setCopied(true)
-    setTimeout(() => setCopied(false), 2000)
-  }
-
+  const reply = `Official update: ${data.recipientName} said YES 💌 Parcel accepted. ${data.senderName}, ab treat banti hai.`
+  const copy = async () => { await navigator.clipboard.writeText(reply); setCopied(true); window.setTimeout(() => setCopied(false), 2000) }
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      className="stage share-stage"
-    >
-      <div className="share-body">
-        <div className="share-badge neon-cyan">YOUR EXPERIENCE IS READY</div>
-        <h2 className="share-title">
-          <Heart size={24} /> {data.recipientName} ke liye ek surprise
-        </h2>
-        <p className="share-sub">
-          Is link ko bhejo {data.recipientName} ko — unhe yeh poora experience milega.
-        </p>
-
-        <div className="share-card">
-          <div className="share-link-wrap">
-            <div className="share-link">{link}</div>
-            <button className="btn-copy" onClick={copyLink}>
-              {copied ? (
-                <>
-                  <Mail size={16} style={{ marginRight: 6 }} /> Copied!
-                </>
-              ) : (
-                <>
-                  <Link size={16} style={{ marginRight: 6 }} /> Copy Link
-                </>
-              )}
-            </button>
-          </div>
-        </div>
-
-        <div className="share-hint">
-          Agar unne haan kaha, toh celebration screen dikhegi agar unne haan nahi kaha,
-          toh 'No' button bhaagega. Bas itna simple hai. 😉
-        </div>
-
-        <div className="share-actions">
-          <button className="btn-restart" onClick={onRestart}>
-            <ArrowLeft size={16} /> Start over
-          </button>
-          <button className="btn-open" onClick={() => window.open(link, '_blank')}>
-            Open in new tab ↗
-          </button>
-        </div>
+    <motion.section className="stage receipt-stage" initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }}>
+      <div className="receipt">
+        <div className="receipt-brand">MIDNIGHT <span>DILIVERY</span><small>FEELINGS FULFILMENT CENTER</small></div>
+        <div className="receipt-dash" />
+        <div className="receipt-row"><span>PARCEL FOR</span><b>{data.recipientName}</b></div><div className="receipt-row"><span>SENT WITH PANIC BY</span><b>{data.senderName}</b></div><div className="receipt-row"><span>DELIVERY STATUS</span><b className="status-delivered">ACCEPTED ♥</b></div><div className="receipt-row"><span>TOTAL FEELINGS</span><b>TOO MANY</b></div>
+        <div className="receipt-dash" />
+        <div className="receipt-promise"><span>PROMISE ON FILE</span>“{data.promise}”</div>
+        <div className="barcode">||| || |||| | ||| || |||||</div><small className="receipt-id">DIL-{String(data.createdAt).slice(-8)} · NO RETURNS, ONLY CUDDLES</small>
       </div>
-    </motion.div>
+      <div className="receipt-copy"><span className="eyebrow">delivery complete · memory unlocked</span><h2>Screenshot lo.<br />Evidence sambhal ke rakho.</h2><p>Future argument mein kaam aa sakta hai: “You literally clicked obviously.”</p><button className="stage-action" onClick={copy}>{copied ? <Check size={17} /> : <Copy size={17} />}{copied ? 'Response copied!' : 'Copy cute response'}</button><button className="text-action" onClick={onRestart}><RotateCcw size={15} /> replay the chaos</button></div>
+    </motion.section>
   )
 }
